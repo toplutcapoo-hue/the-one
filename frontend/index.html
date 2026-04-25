@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SpendSmart – Student Expense Tracker</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── CSS Variables ── */
+    :root {
+      --green-50:  #EAF3DE;
+      --green-100: #C0DD97;
+      --green-400: #639922;
+      --green-600: #3B6D11;
+      --green-800: #27500A;
+      --teal-400:  #1D9E75;
+      --blue-400:  #378ADD;
+      --blue-600:  #185FA5;
+      --amber-400: #BA7517;
+      --red-400:   #E24B4A;
+      --red-600:   #A32D2D;
+      --pink-400:  #D4537E;
+      --purple-400:#7F77DD;
+      --gray-100:  #D3D1C7;
+      --gray-400:  #888780;
+      --gray-800:  #444441;
+      --border:    rgba(0,0,0,0.12);
+      --surface:   #ffffff;
+      --surface2:  #f0f2ec;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 210px;
+      min-height: 100vh;
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+
+    .sidebar-logo {
+      padding: 22px 18px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--green-800);
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    nav { padding: 10px 8px; flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--gray-800);
+      margin-bottom: 2px;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--green-50); color: var(--green-800); }
+    .nav-item.active {
+      background: var(--green-50);
+      color: var(--green-800);
+      font-weight: 600;
+    }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    .sidebar-user {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .user-badge { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--green-100);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--green-800);
+    }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--gray-400); }
+
+    /* ── Main Layout ── */
+    .main {
+      margin-left: 210px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+    .topbar-actions { display: flex; gap: 8px; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 7px 16px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: #1a1a1a;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--surface2); }
+    .btn-primary {
+      background: var(--green-400);
+      color: #ffffff;
+      border-color: var(--green-400);
+    }
+    .btn-primary:hover { background: var(--green-600); }
+
+    /* ── Content Area ── */
+    .content { flex: 1; padding: 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Tip / Alert Box ── */
+    .tip-box {
+      background: var(--green-50);
+      border: 1px solid var(--green-100);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+    .tip-label { font-size: 11px; font-weight: 600; color: var(--green-600); margin-bottom: 4px; }
+    .tip-text  { font-size: 13px; color: var(--green-800); }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+    .stat-label  { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .stat-value  { font-size: 24px; font-weight: 600; }
+    .stat-change { font-size: 11px; margin-top: 4px; }
+    .pos { color: var(--green-600); }
+    .neg { color: var(--red-600); }
+
+    /* ── Two Column Grid ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 14px;
+    }
+
+    /* ── Transaction Items ── */
+    .expense-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .expense-item:last-child { border-bottom: none; }
+    .cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .expense-name  { font-size: 13px; flex: 1; }
+    .expense-date  { font-size: 11px; color: var(--gray-400); }
+    .expense-amount{ font-size: 13px; font-weight: 600; }
+
+    /* ── Category Legend ── */
+    .cat-legend { display: flex; flex-direction: column; gap: 8px; }
+    .cat-row { display: flex; align-items: center; gap: 8px; }
+    .cat-name   { font-size: 12px; flex: 1; }
+    .cat-pct    { font-size: 12px; font-weight: 600; min-width: 30px; text-align: right; }
+    .cat-bar-bg { flex: 2; height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+    .cat-bar-fill { height: 100%; border-radius: 3px; }
+
+    /* ── Bar Chart ── */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 110px;
+      padding: 8px 0 4px;
+    }
+    .bar-col  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar      { width: 100%; border-radius: 4px 4px 0 0; }
+    .bar-lbl  { font-size: 10px; color: var(--gray-400); }
+
+    /* ── Budget Bars ── */
+    .budget-row { margin-bottom: 14px; }
+    .budget-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .budget-cat    { font-size: 13px; }
+    .budget-amounts{ font-size: 12px; color: var(--gray-400); }
+    .progress-bg   { height: 7px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+    .progress-bar  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+    /* ── Forms ── */
+    .form-section { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-family: inherit;
+      background: #ffffff;
+      color: #1a1a1a;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--green-400);
+      box-shadow: 0 0 0 3px rgba(99,153,34,0.12);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Savings Goals ── */
+    .saving-goal {
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .goal-title  { font-size: 13px; font-weight: 500; }
+    .goal-pct    { font-size: 12px; font-weight: 600; color: var(--green-600); }
+
+    /* ── Report Cards ── */
+    .report-card {
+      background: var(--surface2);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .report-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .report-row:last-child { border-bottom: none; }
+    .report-row .lbl { color: var(--gray-400); }
+    .report-row .val { font-weight: 600; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-green  { background: var(--green-50);  color: var(--green-800); }
+    .badge-amber  { background: #FAEEDA; color: #633806; }
+    .badge-red    { background: #FCEBEB; color: #791F1F; }
+
+    /* ── Save Confirmation ── */
+    #save-msg {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--green-50);
+      border: 1px solid var(--green-100);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--green-800);
+    }
+
+    /* ── Health Score ── */
+    .health-score { font-size: 36px; font-weight: 700; color: var(--green-600); }
+    .health-sub   { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col    { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .sidebar { display: none; }
+      .main    { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     SIDEBAR
+══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">💰 SpendSmart</div>
+    <div class="logo-sub">Student Expense Tracker</div>
+  </div>
+
+  <nav>
+    <div class="nav-item active" onclick="navigate('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navigate('add', this)">
+      <span class="nav-icon">➕</span> Add Expense
+    </div>
+    <div class="nav-item" onclick="navigate('budget', this)">
+      <span class="nav-icon">📋</span> Budget
+    </div>
+    <div class="nav-item" onclick="navigate('savings', this)">
+      <span class="nav-icon">🎯</span> Savings Goals
+    </div>
+    <div class="nav-item" onclick="navigate('reports', this)">
+      <span class="nav-icon">📈</span> Reports
+    </div>
+    <div class="nav-item" onclick="navigate('profile', this)">
+      <span class="nav-icon">👤</span> Profile
+    </div>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-badge">
+      <div class="user-avatar">SK</div>
+      <div>
+        <div class="user-name">Sharon K.</div>
+        <div class="user-role">Student</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════
+     MAIN AREA
+══════════════════════════════ -->
+<div class="main">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-sub"  id="page-sub">April 2026 overview</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" onclick="navigate('reports', document.querySelectorAll('.nav-item')[4])">Export Report</button>
+      <button class="btn btn-primary" onclick="navigate('add', document.querySelectorAll('.nav-item')[1])">+ Add Expense</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════
+         PAGE: DASHBOARD
+    ══════════════════════════════ -->
+    <div class="page active" id="page-dashboard">
+
+      <div class="tip-box">
+        <div class="tip-label">⚠ Spending Alert</div>
+        <div class="tip-text">You've spent 78% of your Food budget this month. Consider cooking more meals at home to stay within your limit.</div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value">KSh 8,240</div>
+          <div class="stat-change neg">▲ 12% vs last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Remaining Budget</div>
+          <div class="stat-value">KSh 4,760</div>
+          <div class="stat-change pos">62% utilised</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Savings</div>
+          <div class="stat-value">KSh 2,500</div>
+          <div class="stat-change pos">▲ On track (20% goal)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value">34</div>
+          <div class="stat-change" style="color:var(--gray-400)">This month</div>
+        </div>
+      </div>
+
+      <!-- Two Column -->
+      <div class="two-col">
+
+        <!-- Recent Transactions -->
+        <div class="card">
+          <div class="card-title">Recent Transactions</div>
+          <div class="expense-item">
+            <div class="cat-dot" style="background:#639922"></div>
+            <div style="flex:1">
+              <div class="expense-name">Supermarket – groceries</div>
+              <div class="expense-date">Apr 11, 2026</div>
+            </div>
+            <div class="expense-amount neg">–KSh 450</div>
+          </div>
+          <div class="expense-item">
+            <div class="cat-dot" style="background:#378ADD"></div>
+            <div style="flex:1">
+              <div class="expense-name">Textbooks (Engineering)</div>
+              <div class="expense-date">Apr 10, 2026</div>
+            </div>
+            <div class="expense-amount neg">–KSh 1,200</div>
+          </div>
+          <div class="expense-item">
+            <div class="cat-dot" style="background:#BA7517"></div>
+            <div style="flex:1">
+              <div class="expense-name">Matatu fare – CBD</div>
+              <div class="expense-date">Apr 10, 2026</div>
+            </div>
+            <div class="expense-amount neg">–KSh 80</div>
+          </div>
+          <div class="expense-item">
+            <div class="cat-dot" style="background:#D4537E"></div>
+            <div style="flex:1">
+              <div class="expense-name">Cinema – weekend</div>
+              <div class="expense-date">Apr 9, 2026</div>
+            </div>
+            <div class="expense-amount neg">–KSh 300</div>
+          </div>
+          <div class="expense-item">
+            <div class="cat-dot" style="background:#639922"></div>
+            <div style="flex:1">
+              <div class="expense-name">Lunch – cafeteria</div>
+              <div class="expense-date">Apr 9, 2026</div>
+            </div>
+            <div class="expense-amount neg">–KSh 150</div>
+          </div>
+        </div>
+
+        <!-- Category Spending + Bar Chart -->
+        <div class="card">
+          <div class="card-title">Spending by Category</div>
+          <div class="cat-legend">
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#639922"></div>
+              <div class="cat-name">Food & Dining</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:78%;background:#639922"></div></div>
+              <div class="cat-pct">78%</div>
+            </div>
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#378ADD"></div>
+              <div class="cat-name">Education</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:55%;background:#378ADD"></div></div>
+              <div class="cat-pct">55%</div>
+            </div>
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#BA7517"></div>
+              <div class="cat-name">Transport</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:40%;background:#BA7517"></div></div>
+              <div class="cat-pct">40%</div>
+            </div>
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#D4537E"></div>
+              <div class="cat-name">Entertainment</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:30%;background:#D4537E"></div></div>
+              <div class="cat-pct">30%</div>
+            </div>
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#7F77DD"></div>
+              <div class="cat-name">Health</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:20%;background:#7F77DD"></div></div>
+              <div class="cat-pct">20%</div>
+            </div>
+            <div class="cat-row">
+              <div class="cat-dot" style="background:#888780"></div>
+              <div class="cat-name">Other</div>
+              <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:15%;background:#888780"></div></div>
+              <div class="cat-pct">15%</div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px">
+            <div class="card-title">Weekly Spending (This Week)</div>
+            <div class="bar-chart">
+              <div class="bar-col"><div class="bar" style="height:50px;background:#C0DD97"></div><div class="bar-lbl">Mon</div></div>
+              <div class="bar-col"><div class="bar" style="height:75px;background:#639922"></div><div class="bar-lbl">Tue</div></div>
+              <div class="bar-col"><div class="bar" style="height:35px;background:#C0DD97"></div><div class="bar-lbl">Wed</div></div>
+              <div class="bar-col"><div class="bar" style="height:90px;background:#E24B4A"></div><div class="bar-lbl">Thu</div></div>
+              <div class="bar-col"><div class="bar" style="height:55px;background:#639922"></div><div class="bar-lbl">Fri</div></div>
+              <div class="bar-col"><div class="bar" style="height:65px;background:#639922"></div><div class="bar-lbl">Sat</div></div>
+              <div class="bar-col"><div class="bar" style="height:20px;background:#C0DD97"></div><div class="bar-lbl">Sun</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /dashboard -->
+
+
+    <!-- ══════════════════════════════
+         PAGE: ADD EXPENSE
+    ══════════════════════════════ -->
+    <div class="page" id="page-add">
+      <div class="card" style="max-width:560px">
+        <div class="card-title" style="font-size:15px;margin-bottom:18px">Record New Expense</div>
+
+        <div class="form-section">
+          <label class="form-label">Description *</label>
+          <input class="form-input" id="f-desc" type="text" placeholder="e.g. Lunch at cafeteria">
+        </div>
+
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Amount (KSh) *</label>
+            <input class="form-input" id="f-amount" type="number" placeholder="0.00" min="0">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Date *</label>
+            <input class="form-input" id="f-date" type="date" value="2026-04-11">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-section">
+            <label class="form-label">Category *</label>
+            <select class="form-select" id="f-cat">
+              <option value="">-- Select --</option>
+              <option>Food &amp; Dining</option>
+              <option>Education</option>
+              <option>Transport</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+              <option>Rent &amp; Utilities</option>
+              <option>Clothing</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-section">
+            <label class="form-label">Payment Method</label>
+            <select class="form-select" id="f-pay">
+              <option>M-Pesa</option>
+              <option>Cash</option>
+              <option>Bank Card</option>
+              <option>Student Account</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" id="f-notes" type="text" placeholder="Any additional details...">
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-primary" style="flex:1" onclick="saveExpense()">💾 Save Expense</button>
+          <button class="btn" onclick="clearForm()">Clear</button>
+        </div>
+
+        <div id="save-msg">✅ Expense saved successfully to the SQLite database!</div>
+      </div>
+    </div><!-- /add -->
+
+
+    <!-- ══════════════════════════════
+         PAGE: BUDGET
+    ══════════════════════════════ -->
+    <div class="page" id="page-budget">
+      <div class="tip-box">
+        <div class="tip-label">💡 Budget Health</div>
+        <div class="tip-text">Your overall budget is healthy. Watch your Food spending — it's approaching the limit. Transport and Entertainment are well within range.</div>
+      </div>
+
+      <div class="two-col">
+        <!-- Budget Progress -->
+        <div class="card">
+          <div class="card-title">Monthly Budget Utilisation</div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Food &amp; Dining</span>
+              <span class="budget-amounts">KSh 2,340 / 3,000</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:78%;background:#E24B4A"></div></div>
+          </div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Education</span>
+              <span class="budget-amounts">KSh 1,650 / 3,000</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:55%;background:#378ADD"></div></div>
+          </div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Transport</span>
+              <span class="budget-amounts">KSh 800 / 2,000</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:40%;background:#639922"></div></div>
+          </div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Entertainment</span>
+              <span class="budget-amounts">KSh 450 / 1,500</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:30%;background:#639922"></div></div>
+          </div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Health</span>
+              <span class="budget-amounts">KSh 200 / 1,000</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:20%;background:#639922"></div></div>
+          </div>
+
+          <div class="budget-row">
+            <div class="budget-header">
+              <span class="budget-cat">Other</span>
+              <span class="budget-amounts">KSh 800 / 2,500</span>
+            </div>
+            <div class="progress-bg"><div class="progress-bar" style="width:32%;background:#639922"></div></div>
+          </div>
+
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--gray-400)">Total Monthly Budget</div>
+            <div style="font-size:22px;font-weight:600;margin-top:4px">KSh 13,000</div>
+            <div style="font-size:12px;color:var(--green-600);margin-top:2px">KSh 8,240 spent &nbsp;·&nbsp; KSh 4,760 remaining</div>
+          </div>
+        </div>
+
+        <!-- Edit Budget -->
+        <div class="card">
+          <div class="card-title">Set / Edit Budget Limits</div>
+          <div class="form-section">
+            <label class="form-label">Category</label>
+            <select class="form-select">
+              <option>Food &amp; Dining</option>
+              <option>Education</option>
+              <option>Transport</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-section">
+            <label class="form-label">Monthly Limit (KSh)</label>
+            <input class="form-input" type="number" placeholder="e.g. 3000">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Alert threshold</label>
+            <select class="form-select">
+              <option>70% of limit</option>
+              <option>80% of limit</option>
+              <option>90% of limit</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%">Update Budget Limit</button>
+        </div>
+      </div>
+    </div><!-- /budget -->
+
+
+    <!-- ══════════════════════════════
+         PAGE: SAVINGS
+    ══════════════════════════════ -->
+    <div class="page" id="page-savings">
+      <div class="tip-box">
+        <div class="tip-label">🌟 Savings Tip</div>
+        <div class="tip-text">Saving even KSh 50 daily adds up to KSh 1,500/month. You are 67% toward your Emergency Fund goal — keep it up!</div>
+      </div>
+
+      <div class="two-col">
+        <!-- Goals List -->
+        <div class="card">
+          <div class="card-title">My Saving Goals</div>
+
+          <div class="saving-goal">
+            <div class="goal-header">
+              <span class="goal-title">🏦 Emergency Fund</span>
+              <span class="goal-pct">67%</span>
+            </div>
+            <div class="progress-bg" style="margin-bottom:6px">
+              <div class="progress-bar" style="width:67%;background:#639922"></div>
+            </div>
+            <div style="font-size:11px;color:var(--gray-400)">KSh 6,700 of KSh 10,000 saved</div>
+          </div>
+
+          <div class="saving-goal">
+            <div class="goal-header">
+              <span class="goal-title">💻 Laptop Fund</span>
+              <span class="goal-pct">30%</span>
+            </div>
+            <div class="progress-bg" style="margin-bottom:6px">
+              <div class="progress-bar" style="width:30%;background:#378ADD"></div>
+            </div>
+            <div style="font-size:11px;color:var(--gray-400)">KSh 9,000 of KSh 30,000 saved</div>
+          </div>
+
+          <div class="saving-goal">
+            <div class="goal-header">
+              <span class="goal-title">✈ Holiday Trip</span>
+              <span class="goal-pct">15%</span>
+            </div>
+            <div class="progress-bg" style="margin-bottom:6px">
+              <div class="progress-bar" style="width:15%;background:#BA7517"></div>
+            </div>
+            <div style="font-size:11px;color:var(--gray-400)">KSh 3,000 of KSh 20,000 saved</div>
+          </div>
+
+          <div style="padding-top:12px;border-top:1px solid var(--border);margin-top:4px">
+            <div style="font-size:12px;color:var(--gray-400)">Total saved across all goals</div>
+            <div style="font-size:22px;font-weight:600;margin-top:4px">KSh 18,700</div>
+          </div>
+        </div>
+
+        <!-- New Goal Form -->
+        <div class="card">
+          <div class="card-title">Add New Saving Goal</div>
+          <div class="form-section">
+            <label class="form-label">Goal Name</label>
+            <input class="form-input" type="text" placeholder="e.g. New Smartphone">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Target Amount (KSh)</label>
+            <input class="form-input" type="number" placeholder="0">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Target Date</label>
+            <input class="form-input" type="date">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Monthly Contribution (KSh)</label>
+            <input class="form-input" type="number" placeholder="0">
+          </div>
+          <button class="btn btn-primary" style="width:100%">🎯 Create Goal</button>
+        </div>
+      </div>
+    </div><!-- /savings -->
+
+
+    <!-- ══════════════════════════════
+         PAGE: REPORTS
+    ══════════════════════════════ -->
+    <div class="page" id="page-reports">
+
+      <div style="display:flex;gap:10px;margin-bottom:18px;align-items:center;flex-wrap:wrap">
+        <select class="form-select" style="width:auto">
+          <option>April 2026</option>
+          <option>March 2026</option>
+          <option>February 2026</option>
+          <option>January 2026</option>
+        </select>
+        <button class="btn btn-primary">📄 Generate PDF Report</button>
+        <button class="btn">📊 Export CSV</button>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <!-- Summary -->
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-title">Monthly Financial Summary</div>
+            <div class="report-card">
+              <div class="report-row"><span class="lbl">Total Income</span><span class="val pos">KSh 12,000</span></div>
+              <div class="report-row"><span class="lbl">Total Expenses</span><span class="val neg">KSh 8,240</span></div>
+              <div class="report-row"><span class="lbl">Net Savings</span><span class="val">KSh 3,760</span></div>
+              <div class="report-row"><span class="lbl">Savings Rate</span><span class="val">31.3%</span></div>
+              <div class="report-row"><span class="lbl">No. of Transactions</span><span class="val">34</span></div>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <div class="card">
+            <div class="card-title">Category Breakdown</div>
+            <div class="report-card">
+              <div class="report-row"><span class="lbl">Food &amp; Dining</span><span class="val">KSh 2,340 &nbsp;<span class="badge badge-amber">28%</span></span></div>
+              <div class="report-row"><span class="lbl">Education</span><span class="val">KSh 1,650 &nbsp;<span class="badge badge-green">20%</span></span></div>
+              <div class="report-row"><span class="lbl">Transport</span><span class="val">KSh 800 &nbsp;<span class="badge badge-green">10%</span></span></div>
+              <div class="report-row"><span class="lbl">Entertainment</span><span class="val">KSh 450 &nbsp;<span class="badge badge-green">5%</span></span></div>
+              <div class="report-row"><span class="lbl">Health</span><span class="val">KSh 200 &nbsp;<span class="badge badge-green">2%</span></span></div>
+              <div class="report-row"><span class="lbl">Other</span><span class="val">KSh 2,800 &nbsp;<span class="badge badge-red">34%</span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trend + Health -->
+        <div class="card">
+          <div class="card-title">Monthly Spending Trend (Jan – Apr 2026)</div>
+          <div class="bar-chart" style="height:140px">
+            <div class="bar-col"><div class="bar" style="height:80px;background:#C0DD97"></div><div class="bar-lbl">Jan</div></div>
+            <div class="bar-col"><div class="bar" style="height:60px;background:#C0DD97"></div><div class="bar-lbl">Feb</div></div>
+            <div class="bar-col"><div class="bar" style="height:100px;background:#C0DD97"></div><div class="bar-lbl">Mar</div></div>
+            <div class="bar-col"><div class="bar" style="height:130px;background:#E24B4A"></div><div class="bar-lbl">Apr</div></div>
+          </div>
+
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+            <div class="card-title">Financial Health Score</div>
+            <div class="health-score">74 / 100</div>
+            <div class="health-sub">Good — reduce food overspend to improve your score</div>
+
+            <div style="margin-top:14px">
+              <div class="report-card" style="margin-bottom:0">
+                <div class="report-row"><span class="lbl">Budget adherence</span><span class="val"><span class="badge badge-green">Good</span></span></div>
+                <div class="report-row"><span class="lbl">Savings discipline</span><span class="val"><span class="badge badge-green">On track</span></span></div>
+                <div class="report-row"><span class="lbl">Overspend alerts</span><span class="val"><span class="badge badge-amber">1 category</span></span></div>
+                <div class="report-row"><span class="lbl">Overall trend</span><span class="val"><span class="badge badge-amber">Slightly up</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /reports -->
+
+
+    <!-- ══════════════════════════════
+         PAGE: PROFILE
+    ══════════════════════════════ -->
+    <div class="page" id="page-profile">
+      <div class="two-col">
+        <!-- Personal Info -->
+        <div class="card">
+          <div class="card-title" style="font-size:15px;margin-bottom:18px">Personal Information</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--green-100);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--green-800)">SK</div>
+            <div>
+              <div style="font-size:15px;font-weight:600">Sharon K.</div>
+              <div style="font-size:12px;color:var(--gray-400)">Student · Mombasa, Kenya</div>
+            </div>
+          </div>
+          <div class="form-section">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" type="text" value="Sharon K.">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" value="sharon@student.ac.ke">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Monthly Income (KSh)</label>
+            <input class="form-input" type="number" value="12000">
+          </div>
+          <div class="form-section">
+            <label class="form-label">Institution / University</label>
+            <input class="form-input" type="text" value="Technical University of Mombasa">
+          </div>
+          <button class="btn btn-primary" style="width:100%">Save Changes</button>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+          <div class="card-title">App Settings</div>
+          <div class="report-card">
+            <div class="report-row"><span class="lbl">Currency</span><span class="val">KSh (Kenyan Shilling)</span></div>
+            <div class="report-row"><span class="lbl">Budget cycle</span><span class="val">Monthly</span></div>
+            <div class="report-row"><span class="lbl">Spending alerts</span><span class="val"><span class="badge badge-green">Enabled</span></span></div>
+            <div class="report-row"><span class="lbl">Report frequency</span><span class="val">Monthly</span></div>
+            <div class="report-row"><span class="lbl">Data storage</span><span class="val">SQLite (local)</span></div>
+            <div class="report-row"><span class="lbl">Theme</span><span class="val">Light</span></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="card-title">System Architecture</div>
+            <div style="font-size:12px;color:var(--gray-400);line-height:2;background:var(--surface2);border-radius:var(--radius-md);padding:12px">
+              <b>Backend:</b> Python (Flask / OOP)<br>
+              <b>Database:</b> SQLite3<br>
+              <b>Frontend:</b> HTML5 + CSS3 + JavaScript<br>
+              <b>OOP Classes:</b> User, Expense, Budget, Category, Report<br>
+              <b>Reports output:</b> PDF / CSV auto-generated
+            </div>
+          </div>
+
+          <button class="btn" style="width:100%;margin-top:12px;color:var(--red-600);border-color:var(--red-400)">🔓 Logout</button>
+        </div>
+      </div>
+    </div><!-- /profile -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════════════════════
+     JAVASCRIPT
+══════════════════════════════ -->
+<script>
+  /* Page navigation */
+  const pageMeta = {
+    dashboard: { title: 'Dashboard',      sub: 'April 2026 overview' },
+    add:       { title: 'Add Expense',    sub: 'Record a new transaction' },
+    budget:    { title: 'Budget Planner', sub: 'Manage your spending limits' },
+    savings:   { title: 'Savings Goals',  sub: 'Track and grow your goals' },
+    reports:   { title: 'Financial Reports', sub: 'Analyse your spending patterns' },
+    profile:   { title: 'My Profile',     sub: 'Account & settings' },
+  };
+
+  function navigate(id, el) {
+    /* hide all pages */
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    /* deactivate all nav items */
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    /* activate selected */
+    document.getElementById('page-' + id).classList.add('active');
+    if (el) el.classList.add('active');
+    /* update topbar */
+    const meta = pageMeta[id] || {};
+    document.getElementById('page-title').textContent = meta.title || id;
+    document.getElementById('page-sub').textContent   = meta.sub   || '';
+  }
+
+  /* Save Expense (demo) */
+  function saveExpense() {
+    const desc   = document.getElementById('f-desc').value.trim();
+    const amount = document.getElementById('f-amount').value;
+    const cat    = document.getElementById('f-cat').value;
+
+    if (!desc || !amount || !cat) {
+      alert('Please fill in Description, Amount and Category.');
+      return;
+    }
+    /* In the real system, POST this data to the Python Flask backend:
+       fetch('/api/expenses', { method:'POST', body: JSON.stringify({desc, amount, cat, ...}) }) */
+    const msg = document.getElementById('save-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 3500);
+    clearForm();
+  }
+
+  function clearForm() {
+    ['f-desc','f-amount','f-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-cat').value = '';
+    document.getElementById('f-date').value = '2026-04-11';
+  }
+</script>
+
+</body>
+</html>

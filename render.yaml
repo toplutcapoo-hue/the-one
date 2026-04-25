@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: student-spendwise
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: "gunicorn --pythonpath backend backend.wsgi"
