@@ -1,1 +1,69 @@
+<!-- ONLY SHOWING IMPORTANT CHANGES — YOUR DESIGN IS PRESERVED -->
 
+<!-- 🔥 REPLACE STATS VALUES -->
+<div class="stat-card">
+  <div class="stat-label">Total Spent</div>
+  <div class="stat-value">KSh {{ total }}</div>
+</div>
+
+<div class="stat-card">
+  <div class="stat-label">Transactions</div>
+  <div class="stat-value">{{ expenses|length }}</div>
+</div>
+
+
+<!-- 🔥 REPLACE RECENT TRANSACTIONS -->
+<div class="card">
+  <div class="card-title">Recent Transactions</div>
+
+  {% for expense in expenses %}
+  <div class="expense-item">
+    <div class="cat-dot" style="background:#639922"></div>
+    <div style="flex:1">
+      <div class="expense-name">{{ expense.description }}</div>
+      <div class="expense-date">{{ expense.date }}</div>
+    </div>
+    <div class="expense-amount neg">–KSh {{ expense.amount }}</div>
+  </div>
+  {% empty %}
+  <p>No expenses yet.</p>
+  {% endfor %}
+</div>
+
+
+<!-- 🔥 REPLACE ADD EXPENSE FORM -->
+<div class="page" id="page-add">
+  <div class="card" style="max-width:560px">
+
+    <div class="card-title">Record New Expense</div>
+
+    <form method="POST" action="{% url 'add_expense' %}">
+      {% csrf_token %}
+
+      <div class="form-section">
+        <label class="form-label">Description *</label>
+        <input class="form-input" name="description" type="text">
+      </div>
+
+      <div class="form-row">
+        <div class="form-section">
+          <label class="form-label">Amount *</label>
+          <input class="form-input" name="amount" type="number">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Category *</label>
+          <select class="form-select" name="category">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Rent</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary">Save Expense</button>
+    </form>
+
+  </div>
+</div>
